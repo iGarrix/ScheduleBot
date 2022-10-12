@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.3.32901.215
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScheduleBot", "ScheduleBot\ScheduleBot.csproj", "{6E09A707-4CE4-4DB8-A5BD-FF755CA6AD1A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScheduleBot.DB", "ScheduleBot.DB\ScheduleBot.DB.csproj", "{869B4137-DE58-4B7C-8B9A-9D39B4046B38}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6E09A707-4CE4-4DB8-A5BD-FF755CA6AD1A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6E09A707-4CE4-4DB8-A5BD-FF755CA6AD1A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6E09A707-4CE4-4DB8-A5BD-FF755CA6AD1A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6E09A707-4CE4-4DB8-A5BD-FF755CA6AD1A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{869B4137-DE58-4B7C-8B9A-9D39B4046B38}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{869B4137-DE58-4B7C-8B9A-9D39B4046B38}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{869B4137-DE58-4B7C-8B9A-9D39B4046B38}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{869B4137-DE58-4B7C-8B9A-9D39B4046B38}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {8D4ED355-BCAC-4BF6-8576-902DA4C0A144}
+	EndGlobalSection
+EndGlobal
