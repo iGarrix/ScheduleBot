@@ -8,6 +8,9 @@ using Telegram.Bot.Types.ReplyMarkups;
 using Telegram.Bot.Types;
 using Telegram.Bot;
 using Telegram.Bot.Extensions.Polling;
+using ScheduleBot.SpreadSheets;
+using ScheduleBot.Helpers;
+using System.Reflection.Metadata;
 
 namespace ScheduleBot.Source
 {
@@ -16,10 +19,13 @@ namespace ScheduleBot.Source
         private ITelegramBotClient source { get; set; }
         private List<Action> actions { get; set; }
         private Update upt { get; set; } = null;
+        private SpreadSheetCore core { get; set; }
+        private string selectGroup { get; set; }
 
         public SourceBot(string token, ReceiverOptions receiverOptions, CancellationToken cancellationToken)
         {
             this.source = new TelegramBotClient(token);
+            core = new SpreadSheetCore();
             if (receiverOptions is not null)
             {
                 source.StartReceiving(
@@ -67,7 +73,7 @@ namespace ScheduleBot.Source
                 case UpdateType.Message:
                     {
                         foreach (var item in actions)
-                        {   
+                        {
                             item.Invoke();
                         }
                         break;
@@ -83,8 +89,6 @@ namespace ScheduleBot.Source
             throw exception;
         }
 
-
-        // Following on a group
         public async Task Starting()
         {
             var message = upt.Message;
@@ -104,10 +108,10 @@ namespace ScheduleBot.Source
                 message.Text.ToLower() == "КН11".ToLower() || message.Text.ToLower() == "І11".ToLower() || message.Text.ToLower() == "ЦТ11".ToLower())
             {
                 List<List<KeyboardButton>> rows = new List<List<KeyboardButton>>();
-                rows.Add(new List<KeyboardButton>() { new KeyboardButton("Розклад") });
+                rows.Add(new List<KeyboardButton>() { new KeyboardButton("Розклад групи: " + message.Text) });
                 rows.Add(new List<KeyboardButton>() { new KeyboardButton("Розклад на сьогодні") });
                 rows.Add(new List<KeyboardButton>() { new KeyboardButton("Вибрати групу") });
-
+                selectGroup = message.Text;
                 ReplyKeyboardMarkup reply = new ReplyKeyboardMarkup(rows);
                 await source.SendTextMessageAsync(message.Chat, "Ви вибрали групу " + message.Text, replyMarkup: reply, parseMode: ParseMode.MarkdownV2);
             }
@@ -116,7 +120,78 @@ namespace ScheduleBot.Source
         public async Task GetSchedule()
         {
             var message = upt.Message;
-            if (message.Text.ToLower() == "Розклад".ToLower())
+            if (message.Text.ToLower().Contains("Розклад групи".ToLower()))
+            {
+                var content = await core.GetContentAsync();
+                var row = content.Select(s => s.ToList()).Select(ss => $"{ss.ToList()[Helper.GetIndexGroup(selectGroup)]}").Skip(1);
+                await source.SendTextMessageAsync(message.Chat, "Розклад на весь тиждень");
+                List<string> schedule = new List<string>();
+                schedule.Add("\n\nНа понеділок");
+                for (int i = 0; i < row.Take(4).Count(); ++i)
+                {
+                    schedule.Add($"{i + 1}) " + row.Take(4).ToList()[i]);
+                }
+                schedule.Add("\n\nНа вівторок");
+                for (int i = 0; i < row.Skip(4).Take(4).Count(); ++i)
+                {
+                    schedule.Add($"{i + 1}) " + row.Skip(4).Take(4).ToList()[i]);
+                }
+                schedule.Add("\n\nНа середу");
+                for (int i = 0; i < row.Skip(8).Take(4).Count(); ++i)
+                {
+                    schedule.Add($"{i + 1}) " + row.Skip(8).Take(4).ToList()[i]);
+                }
+                schedule.Add("\n\nНа четверг");
+                for (int i = 0; i < row.Skip(12).Take(4).Count(); ++i)
+                {
+                    schedule.Add($"{i + 1}) " + row.Skip(12).Take(4).ToList()[i]);
+                }
+                schedule.Add("\n\nНа п'ятницю");
+                for (int i = 0; i < row.Skip(16).Take(4).Count(); ++i)
+                {
+                    schedule.Add($"{i + 1}) " + row.Skip(16).Take(4).ToList()[i]);
+                }
+                await source.SendTextMessageAsync(message.Chat, String.Join("\n", schedule));
+            }
+            if ((int)DateTime.Now.DayOfWeek >= 1 && (int)DateTime.Now.DayOfWeek <= 5)
+            {
+                if (message.Text.ToLower().Contains("Розклад на сьогодні".ToLower()))
+                {
+                    var content = await core.GetContentAsync();
+                    var row = content.Select(s => s.ToList()).Select(ss => $"{ss.ToList()[1]}").Skip(1);
+                    await source.SendTextMessageAsync(message.Chat, $"Розклад на {Helper.GetNotDay()}");
+                    List<string> scheduleNowdays = new List<string>();
+                    scheduleNowdays.Add($"\n\n{Helper.GetNotDay()}");
+                    int skipped = 0;
+                    switch (DateTime.Now.DayOfWeek)
+                    {
+                        case DayOfWeek.Tuesday:
+                            skipped += 4 * 1;
+                            break;
+                        case DayOfWeek.Wednesday:
+                            skipped += 4 * 2;
+                            break;
+                        case DayOfWeek.Thursday:
+                            skipped += 4 * 3;
+                            break;
+                        case DayOfWeek.Friday:
+                            skipped += 4 * 4;
+                            break;
+                        default:
+                            break;
+                    }
+                    for (int i = 0; i < row.Take(4).Count(); ++i)
+                    {
+                        scheduleNowdays.Add($"{i + 1}) " + row.Skip(skipped).Take(4).ToList()[i]);
+                    }
+                    await source.SendTextMessageAsync(message.Chat, String.Join("\n", scheduleNowdays));
+                }
+            }
+            else if (message.Text.ToLower().Contains("Розклад на сьогодні".ToLower()))
+            {     
+                await source.SendTextMessageAsync(message.Chat, "Пар на сьогодні немає");
+            }
+            if (message.Text.ToLower().Contains("Розклад".ToLower()))
             {
                 InlineKeyboardButton excel = new InlineKeyboardButton("");
                 excel.Text = "Google Excel";
