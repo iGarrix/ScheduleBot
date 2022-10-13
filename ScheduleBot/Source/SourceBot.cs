@@ -158,7 +158,7 @@ namespace ScheduleBot.Source
                 if (message.Text.ToLower().Contains("Розклад на сьогодні".ToLower()))
                 {
                     var content = await core.GetContentAsync();
-                    var row = content.Select(s => s.ToList()).Select(ss => $"{ss.ToList()[1]}").Skip(1);
+                    var row = content.Select(s => s.ToList()).Select(ss => $"{ss.ToList()[Helper.GetIndexGroup(selectGroup)]}").Skip(1);
                     await source.SendTextMessageAsync(message.Chat, $"Розклад на {Helper.GetNotDay()}");
                     List<string> scheduleNowdays = new List<string>();
                     scheduleNowdays.Add($"\n\n{Helper.GetNotDay()}");
