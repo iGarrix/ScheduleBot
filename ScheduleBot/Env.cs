@@ -8,6 +8,6 @@ namespace ScheduleBot
 {
     public static class Env
     {
-        public static readonly string BOT_API_TOKEN = "5627746363:AAFmlGjxKfcGZQfwtje1C9Od8r62ro33gGc";
+        public static readonly string BOT_API_TOKEN = "5666252527:AAFpWhGB2mDeayW9AW7-9yiMqnQY9yd1whA";
     }
 }

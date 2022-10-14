@@ -17,4 +17,10 @@
     <PackageReference Include="Telegram.Bot.Extensions.Polling" Version="1.0.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Data\eminent-prism-365418-7e36fb6b91eb.json">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
