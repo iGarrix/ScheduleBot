@@ -21,11 +21,11 @@ namespace ScheduleBot.Source
     {
         private ITelegramBotClient source { get; set; }
         private ISpreadSheetCore core { get; set; }
-        private IEnumerable<IEnumerable<string>> header { get; set; }
+        private IEnumerable<IEnumerable<string>> header { get; set; } = null;
 
         private string selectedGroup { get; set; } = "";
 
-        public SourceBot(string token, string credentials, ReceiverOptions receiverOptions, CancellationToken cts)
+        public SourceBot(string token, string credentials, ReceiverOptions receiverOptions, CancellationToken cancellationToken)
         {
             this.source = new TelegramBotClient(token);
             Console.WriteLine($"{DateTime.Now} Initializing bot core");
@@ -37,11 +37,10 @@ namespace ScheduleBot.Source
                     HandleUpdateAsync,
                     HandleErrorAsync,
                     receiverOptions,
-                    cancellationToken: cts
+                    cancellationToken
                 );
                 Console.WriteLine($"{DateTime.Now} Reveiving");
-            }
-            header = core.ReadAsync(Env.SpreadSheets.Test, "C3:H3").Result;
+            } 
         }
 
         public ITelegramBotClient GetCore
@@ -63,7 +62,6 @@ namespace ScheduleBot.Source
             {
                 Console.WriteLine($"{DateTime.Now} Updator reference is null");
                 throw new Exception("Updator reference is null");
-                return;
             }
             Message message = update.Message;
             if (message is null)
@@ -81,8 +79,12 @@ namespace ScheduleBot.Source
             // Message view log
             Console.WriteLine($"[{DateTime.Now}] {message?.From?.Username} - {message?.Text}");
 
+            if (header is null)
+            {
+                header = core.ReadAsync(Env.SpreadSheets.Test, "C3:H3").Result;
+                Console.WriteLine($"{DateTime.Now} Fetching schedule header");
+            }
             List<object> dematrix = header.Dematrix().ToList();
-            Console.WriteLine($"{DateTime.Now} Fetching schedule header");
 
             #region Handler of message types
             switch (update.Type)
@@ -127,13 +129,15 @@ namespace ScheduleBot.Source
 
         public Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
         {
-            var ErrorMessage = exception switch
-            {
-                ApiRequestException apiRequestException => $"Telegram API Error:\n[{apiRequestException.ErrorCode}]\n{apiRequestException.Message}",
-                _ => exception.ToString()
-            };
-            Console.WriteLine(ErrorMessage);
-            return Task.CompletedTask;
+            //var ErrorMessage = exception switch
+            //{
+            //    ApiRequestException apiRequestException => $"Telegram API Error:\n[{apiRequestException.ErrorCode}]\n{apiRequestException.Message}",
+            //    _ => exception.ToString()
+            //};
+            //Console.WriteLine(ErrorMessage);
+            //return Task.CompletedTask;
+            Console.WriteLine(exception.Message);
+            throw exception;
         }
     }
 }
