@@ -20,6 +20,7 @@ namespace ScheduleBot.Source
     {
         private ITelegramBotClient source { get; set; }
         private ISpreadSheetCore core { get; set; }
+        private IEnumerable<IEnumerable<string>> header { get; set; }
 
         private string selectedGroup { get; set; } = "";
 
@@ -39,6 +40,7 @@ namespace ScheduleBot.Source
                 );
                 Console.WriteLine($"{DateTime.Now} Reveiving");
             }
+            header = core.ReadAsync(Env.SpreadSheets.Test, "C3:H3").Result;
         }
 
         public ITelegramBotClient GetCore
@@ -77,7 +79,6 @@ namespace ScheduleBot.Source
             // Message view log
             Console.WriteLine($"[{DateTime.Now}] {message?.From?.Username} - {message?.Text}");
 
-            var header = (await core.ReadAsync(Env.SpreadSheets.Test, "C3:H3"));
             List<object> dematrix = header.Dematrix().ToList();
             Console.WriteLine($"{DateTime.Now} Fetching schedule header");
 
