@@ -12,6 +12,7 @@ using ScheduleBot.SpreadSheets;
 using System.Reflection.Metadata;
 using ScheduleBot.ExtendedHelpers;
 using System.Globalization;
+using Telegram.Bot.Exceptions;
 
 namespace ScheduleBot.Source
 {
@@ -24,7 +25,7 @@ namespace ScheduleBot.Source
 
         private string selectedGroup { get; set; } = "";
 
-        public SourceBot(string token, string credentials, ReceiverOptions receiverOptions, CancellationToken cancellationToken)
+        public SourceBot(string token, string credentials, ReceiverOptions receiverOptions, CancellationToken cts)
         {
             this.source = new TelegramBotClient(token);
             Console.WriteLine($"{DateTime.Now} Initializing bot core");
@@ -36,7 +37,7 @@ namespace ScheduleBot.Source
                     HandleUpdateAsync,
                     HandleErrorAsync,
                     receiverOptions,
-                    cancellationToken
+                    cancellationToken: cts
                 );
                 Console.WriteLine($"{DateTime.Now} Reveiving");
             }
@@ -62,6 +63,7 @@ namespace ScheduleBot.Source
             {
                 Console.WriteLine($"{DateTime.Now} Updator reference is null");
                 throw new Exception("Updator reference is null");
+                return;
             }
             Message message = update.Message;
             if (message is null)
@@ -125,8 +127,13 @@ namespace ScheduleBot.Source
 
         public Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
         {
-            Console.WriteLine(exception.Message);
-            throw exception;
+            var ErrorMessage = exception switch
+            {
+                ApiRequestException apiRequestException => $"Telegram API Error:\n[{apiRequestException.ErrorCode}]\n{apiRequestException.Message}",
+                _ => exception.ToString()
+            };
+            Console.WriteLine(ErrorMessage);
+            return Task.CompletedTask;
         }
     }
 }

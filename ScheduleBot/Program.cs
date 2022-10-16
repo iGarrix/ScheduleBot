@@ -64,15 +64,16 @@ Console.OutputEncoding = Encoding.UTF8;
 
 try
 {
-    var cts = new CancellationTokenSource();
+    using var cts = new CancellationTokenSource();
     var cancellationToken = cts.Token;
     var receiverOptions = new ReceiverOptions
     {
         AllowedUpdates = Array.Empty<UpdateType>(),
     };
-    SourceBot bot = new SourceBot(Env.BOT_API_TOKEN, Env.GoogleCloudDeveloperConsoleCredentials, receiverOptions, cancellationToken);
+    SourceBot bot = new SourceBot(Env.BOT_API_TOKEN, Env.GoogleCloudDeveloperConsoleCredentials, receiverOptions, cts.Token);
     Console.WriteLine("[Started] " + bot.GetCore.GetMeAsync().Result.FirstName);
     Console.ReadLine();
+    cts.Cancel();
 }
 catch (Exception ex)
 {
