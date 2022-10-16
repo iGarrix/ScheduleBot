@@ -15,5 +15,6 @@ namespace ScheduleBot.Source
         Task GetScheduleGroupAsync(Message message, List<object> dematrix);
         Task GetScheduleTodayAsync(Message message, List<object> dematrix);
         Task GetOriginalScheduleDriveAsync(Message message);
+        Task AutoSelectedGroup(Message message, List<object> dematrix);
     }
 }

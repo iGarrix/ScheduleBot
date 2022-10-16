@@ -93,28 +93,14 @@ namespace ScheduleBot.Source
                         }
                         if (selectedGroup is null || selectedGroup == "" || selectedGroup == String.Empty)
                         {
-                            List<List<KeyboardButton>> rows = new List<List<KeyboardButton>>();
-                            var rows1 = new List<KeyboardButton>();
-                            dematrix.Take(3).ToList().ForEach(f =>
-                            {
-                                rows1.Add(new KeyboardButton(f is not null ? $"{f}" : " "));
-                            });
-                            var rows2 = new List<KeyboardButton>();
-                            dematrix.Skip(3).Take(3).ToList().ForEach(f =>
-                            {
-                                rows2.Add(new KeyboardButton(f is not null ? $"{f}" : " "));
-                            });
-                            rows.Add(rows1);
-                            rows.Add(rows2);
-                            ReplyKeyboardMarkup reply = new ReplyKeyboardMarkup(rows);
-                            await source.SendTextMessageAsync(message.Chat, "📌❌ Ви не вибрали групу, виберіть групу  ❌📌", replyMarkup: reply, parseMode: ParseMode.MarkdownV2);
+                            await AutoSelectedGroup(message, dematrix);
+                        }
+                        if (message.Text.ToLower() == "/start" || message.Text.ToLower().Contains("Всі групи".ToLower()) || message.Text.ToLower().Contains("Вибрати групу".ToLower()))
+                        {
+                            await ChoosingGroupAsync(message, dematrix);
                         }
                         else
                         {
-                            if (message.Text.ToLower() == "/start" || message.Text.ToLower().Contains("Всі групи".ToLower()) || message.Text.ToLower().Contains("Вибрати групу".ToLower()))
-                            {
-                                await ChoosingGroupAsync(message, dematrix);
-                            }
                             if (message.Text.ToLower().Contains("Час пар".ToLower()) || message.Text.ToLower().Contains("Час".ToLower()))
                             {
                                 await GetPairEndedTimeAsync(message);

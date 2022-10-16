@@ -31,10 +31,11 @@ Console.OutputEncoding = Encoding.UTF8;
 //    List<string> allSchedule = new List<string>();
 //    int days = 1;
 //    CultureInfo ua = new CultureInfo("uk-UA");
-//    allSchedule.Add("📌🔖 Розклад на " + ua.DateTimeFormat.GetDayName((DayOfWeek)days) + " 🔖📌" + "\n");
+//    allSchedule.Add("📌🔖 Розклад на " + ua.DateTimeFormat.GetDayName((DayOfWeek)days).ToGenitiveCase() + " 🔖📌" + "\n");
 //    for (int i = 0; i < contentDematrix.Count(); ++i)
 //    {
-//        if (contentDematrix.ToList()[i] is not null || contentDematrix.ToList()[i].ToString() is not null || contentDematrix.ToList()[i].ToString() != "" || contentDematrix.ToList()[i].ToString() != String.Empty)
+//        if (contentDematrix.ToList()[i] is not null && contentDematrix.ToList()[i].ToString() is not null
+//            && contentDematrix.ToList()[i].ToString() != "" && contentDematrix.ToList()[i].ToString() != String.Empty && contentDematrix.ToList()[i].ToString() != "None")
 //        {
 //            allSchedule.Add($" 🔔 " + contentDematrix.ToList()[i]);
 //        }
@@ -42,18 +43,18 @@ Console.OutputEncoding = Encoding.UTF8;
 //        {
 //            allSchedule.Add("");
 //        }
-//        if (i % 3 == 0 && i > 0 && i != contentDematrix.Count() - 1)
+//        if ((i + 1) % 4 == 0 && i > 0 && i != contentDematrix.Count() - 1)
 //        {
-//            if (days < 5)
+//            if (days <= 5)
 //            {
 //                ++days;
 //            }
 //            allSchedule.Add("");
-//            allSchedule.Add("📌🔖 Розклад на " + ua.DateTimeFormat.GetDayName((DayOfWeek)days) + " 🔖📌" + "\n");
+//            allSchedule.Add("📌🔖 Розклад на " + ua.DateTimeFormat.GetDayName((DayOfWeek)days).ToGenitiveCase() + " 🔖📌" + "\n");
 //            allSchedule.Add("");
 //        }
 //    }
-//    allSchedule.ViewDebug();
+//    Console.WriteLine(allSchedule.ToString<string>());
 //}
 //catch (Exception ex)
 //{

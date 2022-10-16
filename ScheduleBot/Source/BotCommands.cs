@@ -95,10 +95,11 @@ namespace ScheduleBot.Source
                 List<string> allSchedule = new List<string>();
                 int days = 1;
                 CultureInfo ua = new CultureInfo("uk-UA");
-                allSchedule.Add("📌🔖 Розклад на " + ua.DateTimeFormat.GetDayName((DayOfWeek)days) + " 🔖📌" + "\n");
+                allSchedule.Add("📌🔖 Розклад на " + ua.DateTimeFormat.GetDayName((DayOfWeek)days).ToGenitiveCase() + " 🔖📌" + "\n");
                 for (int i = 0; i < contentDematrix.Count(); ++i)
                 {
-                    if (contentDematrix.ToList()[i] is not null || contentDematrix.ToList()[i].ToString() is not null || contentDematrix.ToList()[i].ToString() != "" || contentDematrix.ToList()[i].ToString() != String.Empty)
+                    if (contentDematrix.ToList()[i] is not null && contentDematrix.ToList()[i].ToString() is not null
+                        && contentDematrix.ToList()[i].ToString() != "" && contentDematrix.ToList()[i].ToString() != String.Empty && contentDematrix.ToList()[i].ToString() != "None")
                     {
                         allSchedule.Add($" 🔔 " + contentDematrix.ToList()[i]);
                     }
@@ -106,14 +107,14 @@ namespace ScheduleBot.Source
                     {
                         allSchedule.Add("");
                     }
-                    if (i % 3 == 0 && i > 0 && i != contentDematrix.Count() - 1)
+                    if ((i + 1) % 4 == 0 && i > 0 && i != contentDematrix.Count() - 1)
                     {
-                        if (days < 5)
+                        if (days <= 5)
                         {
                             ++days;
                         }
                         allSchedule.Add("");
-                        allSchedule.Add("📌🔖 Розклад на " + ua.DateTimeFormat.GetDayName((DayOfWeek)days) + " 🔖📌" + "\n");
+                        allSchedule.Add("📌🔖 Розклад на " + ua.DateTimeFormat.GetDayName((DayOfWeek)days).ToGenitiveCase() + " 🔖📌" + "\n");
                         allSchedule.Add("");
                     }
                 }
@@ -155,7 +156,7 @@ namespace ScheduleBot.Source
                 }
                 else
                 {
-                    await source.SendTextMessageAsync(message.Chat, $"📌❌ Сьогодні {ua.DateTimeFormat.GetDayName(DateTime.Now.DayOfWeek)}, пар немає ❌📌");
+                    await source.SendTextMessageAsync(message.Chat, $"❌ Сьогодні {ua.DateTimeFormat.GetDayName(DateTime.Now.DayOfWeek)}, пар немає ❌");
                     await GetScheduleForDayAsync(message, dematrix, (DayOfWeek)1);
                 }
             }
@@ -200,6 +201,32 @@ namespace ScheduleBot.Source
                 excel.Url = Env.GoogleDriveArchive;
                 InlineKeyboardMarkup reply = new InlineKeyboardMarkup(excel);
                 await source.SendTextMessageAsync(message.Chat, "🔖 Оригінальні розклади усіх груп 🔖", replyMarkup: reply, parseMode: ParseMode.MarkdownV2);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[" + DateTime.Now + "] " + ex.Message);
+            }
+        }
+
+        public async Task AutoSelectedGroup(Message message, List<object> dematrix)
+        {
+            try
+            {
+                List<List<KeyboardButton>> rows = new List<List<KeyboardButton>>();
+                var rows1 = new List<KeyboardButton>();
+                dematrix.Take(3).ToList().ForEach(f =>
+                {
+                    rows1.Add(new KeyboardButton(f is not null ? $"{f}" : " "));
+                });
+                var rows2 = new List<KeyboardButton>();
+                dematrix.Skip(3).Take(3).ToList().ForEach(f =>
+                {
+                    rows2.Add(new KeyboardButton(f is not null ? $"{f}" : " "));
+                });
+                rows.Add(rows1);
+                rows.Add(rows2);
+                ReplyKeyboardMarkup reply = new ReplyKeyboardMarkup(rows);
+                await source.SendTextMessageAsync(message.Chat, "❌ Ви не вибрали групу, виберіть групу  ❌", replyMarkup: reply, parseMode: ParseMode.MarkdownV2);
             }
             catch (Exception ex)
             {
