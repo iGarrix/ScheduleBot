@@ -10,35 +10,35 @@ using Telegram.Bot;
 using Telegram.Bot.Extensions.Polling;
 using ScheduleBot.SpreadSheets;
 using System.Reflection.Metadata;
+using ScheduleBot.ExtendedHelpers;
+using System.Globalization;
 
 namespace ScheduleBot.Source
 {
     // release v1.0
-    public class SourceBot : ISourceBot, IBotCommands
+    public partial class SourceBot : ISourceBot, IBotCommands
     {
         private ITelegramBotClient source { get; set; }
-        private List<Action> actions { get; set; }
-        private Update upt { get; set; } = null;
-        private SpreadSheetCore core { get; set; }
-        private string selectGroup { get; set; }
+        private ISpreadSheetCore core { get; set; }
 
-        public SourceBot(string token, ReceiverOptions receiverOptions, CancellationToken cancellationToken)
+        private string selectedGroup { get; set; } = "";
+
+        public SourceBot(string token, string credentials, ReceiverOptions receiverOptions, CancellationToken cancellationToken)
         {
             this.source = new TelegramBotClient(token);
-           // core = new SpreadSheetCore();
+            Console.WriteLine($"{DateTime.Now} Initializing bot core");
+            this.core = new SpreadSheetCore(credentials);
+            Console.WriteLine($"{DateTime.Now} Initializing spreadsheet core");
             if (receiverOptions is not null)
             {
-                source.StartReceiving(
+                source.ReceiveAsync(
                     HandleUpdateAsync,
                     HandleErrorAsync,
                     receiverOptions,
                     cancellationToken
                 );
+                Console.WriteLine($"{DateTime.Now} Reveiving");
             }
-            this.actions = new List<Action>();
-            this.actions.Add(new Action(() => { Starting(); }));
-            this.actions.Add(new Action(() => { SubscribeOnGroup(); }));
-            this.actions.Add(new Action(() => { GetSchedule(); }));
         }
 
         public ITelegramBotClient GetCore
@@ -55,32 +55,85 @@ namespace ScheduleBot.Source
 
         public async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
-
+            #region Equals of null object reference
+            if (update is null)
+            {
+                Console.WriteLine($"{DateTime.Now} Updator reference is null");
+                throw new Exception("Updator reference is null");
+            }
             Message message = update.Message;
-            this.upt = update;
             if (message is null)
             {
-                throw new Exception("Message doesn't not initialized");
+                Console.WriteLine($"{DateTime.Now} Sending message reference is null");
+                throw new Exception("Sending message reference is null");
             }
-            if (upt is null)
+            if (message.Text is null)
             {
-                throw new Exception("Updator doesn't not initialized");
+                Console.WriteLine($"{DateTime.Now} Sended message subinstance reference is null");
+                throw new Exception("Sended message subinstance reference is null");
             }
-            Console.WriteLine($"[{DateTime.Now}] {message.From.Username} - {message.Text}");
+            #endregion
 
+            // Message view log
+            Console.WriteLine($"[{DateTime.Now}] {message?.From?.Username} - {message?.Text}");
+
+            var header = (await core.ReadAsync(Env.SpreadSheets.Test, "C3:H3"));
+            List<object> dematrix = header.Dematrix().ToList();
+            Console.WriteLine($"{DateTime.Now} Fetching schedule header");
+
+            #region Handler of message types
             switch (update.Type)
             {
                 case UpdateType.Message:
                     {
-                        foreach (var item in actions)
+                        if (dematrix.FirstOrDefault(f => f.ToString().Corrective() == message.Text.Corrective()) is not null)
                         {
-                            item.Invoke();
+                            selectedGroup = message.Text;
+                            await GetChoosedGroupMenuAsync(message);
+                        }
+                        if (selectedGroup is null || selectedGroup == "" || selectedGroup == String.Empty)
+                        {
+                            List<List<KeyboardButton>> rows = new List<List<KeyboardButton>>();
+                            var rows1 = new List<KeyboardButton>();
+                            dematrix.Take(3).ToList().ForEach(f =>
+                            {
+                                rows1.Add(new KeyboardButton(f is not null ? $"{f}" : " "));
+                            });
+                            var rows2 = new List<KeyboardButton>();
+                            dematrix.Skip(3).Take(3).ToList().ForEach(f =>
+                            {
+                                rows2.Add(new KeyboardButton(f is not null ? $"{f}" : " "));
+                            });
+                            rows.Add(rows1);
+                            rows.Add(rows2);
+                            ReplyKeyboardMarkup reply = new ReplyKeyboardMarkup(rows);
+                            await source.SendTextMessageAsync(message.Chat, "📌❌ Ви не вибрали групу, виберіть групу  ❌📌", replyMarkup: reply, parseMode: ParseMode.MarkdownV2);
+                        }
+                        else
+                        {
+                            if (message.Text.ToLower() == "/start" || message.Text.ToLower().Contains("Всі групи".ToLower()) || message.Text.ToLower().Contains("Вибрати групу".ToLower()))
+                            {
+                                await ChoosingGroupAsync(message, dematrix);
+                            }
+                            if (message.Text.ToLower().Contains("Час пар".ToLower()) || message.Text.ToLower().Contains("Час".ToLower()))
+                            {
+                                await GetPairEndedTimeAsync(message);
+                            }
+                            if (message.Text.ToLower().Contains("Розклад на сьогодні".ToLower()))
+                            {
+                                await GetScheduleTodayAsync(message, dematrix);
+                            }
+                            if (message.Text.ToLower().Contains("Розклад групи".ToLower()))
+                            {
+                                await GetScheduleGroupAsync(message, dematrix);
+                            }
                         }
                         break;
                     }
                 default:
                     break;
             }
+            #endregion
         }
 
         public Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
@@ -88,118 +141,5 @@ namespace ScheduleBot.Source
             Console.WriteLine(exception.Message);
             throw exception;
         }
-
-        public async Task Starting()
-        {
-            var message = upt.Message;
-            if (message.Text.ToLower() == "/start" || message.Text.ToLower() == "Вибрати групу".ToLower())
-            {
-                List<List<KeyboardButton>> rows = new List<List<KeyboardButton>>();
-                rows.Add(new List<KeyboardButton>() { new KeyboardButton("М11"), new KeyboardButton("ІПЗ11"), new KeyboardButton("ПМ11") });
-                rows.Add(new List<KeyboardButton>() { new KeyboardButton("КН11"), new KeyboardButton("І11"), new KeyboardButton("ЦТ11") });
-                ReplyKeyboardMarkup reply = new ReplyKeyboardMarkup(rows);
-                await source.SendTextMessageAsync(message.Chat, "Виберіть групу", replyMarkup: reply, parseMode: ParseMode.MarkdownV2);
-            }
-        }
-        public async Task SubscribeOnGroup()
-        {
-            var message = upt.Message;
-            if (message.Text.ToLower() == "М11".ToLower() || message.Text.ToLower() == "ІПЗ11".ToLower() || message.Text.ToLower() == "ПМ11".ToLower() ||
-                message.Text.ToLower() == "КН11".ToLower() || message.Text.ToLower() == "І11".ToLower() || message.Text.ToLower() == "ЦТ11".ToLower())
-            {
-                List<List<KeyboardButton>> rows = new List<List<KeyboardButton>>();
-                rows.Add(new List<KeyboardButton>() { new KeyboardButton("Розклад групи: " + message.Text) });
-                rows.Add(new List<KeyboardButton>() { new KeyboardButton("Розклад на сьогодні") });
-                rows.Add(new List<KeyboardButton>() { new KeyboardButton("Вибрати групу") });
-                selectGroup = message.Text;
-                ReplyKeyboardMarkup reply = new ReplyKeyboardMarkup(rows);
-                await source.SendTextMessageAsync(message.Chat, "Ви вибрали групу " + message.Text, replyMarkup: reply, parseMode: ParseMode.MarkdownV2);
-            }
-        }
-
-        public async Task GetSchedule()
-        {
-            var message = upt.Message;
-            //if (message.Text.ToLower().Contains("Розклад групи".ToLower()))
-            //{
-            //    var content = await core.GetContentAsync();
-            //    var row = content.Select(s => s.ToList()).Select(ss => $"{ss.ToList()[Helper.GetIndexGroup(selectGroup)]}").Skip(1);
-            //    await source.SendTextMessageAsync(message.Chat, "Розклад на весь тиждень");
-            //    List<string> schedule = new List<string>();
-            //    schedule.Add("\n\nНа понеділок");
-            //    for (int i = 0; i < row.Take(4).Count(); ++i)
-            //    {
-            //        schedule.Add($"{i + 1}) " + row.Take(4).ToList()[i]);
-            //    }
-            //    schedule.Add("\n\nНа вівторок");
-            //    for (int i = 0; i < row.Skip(4).Take(4).Count(); ++i)
-            //    {
-            //        schedule.Add($"{i + 1}) " + row.Skip(4).Take(4).ToList()[i]);
-            //    }
-            //    schedule.Add("\n\nНа середу");
-            //    for (int i = 0; i < row.Skip(8).Take(4).Count(); ++i)
-            //    {
-            //        schedule.Add($"{i + 1}) " + row.Skip(8).Take(4).ToList()[i]);
-            //    }
-            //    schedule.Add("\n\nНа четверг");
-            //    for (int i = 0; i < row.Skip(12).Take(4).Count(); ++i)
-            //    {
-            //        schedule.Add($"{i + 1}) " + row.Skip(12).Take(4).ToList()[i]);
-            //    }
-            //    schedule.Add("\n\nНа п'ятницю");
-            //    for (int i = 0; i < row.Skip(16).Take(4).Count(); ++i)
-            //    {
-            //        schedule.Add($"{i + 1}) " + row.Skip(16).Take(4).ToList()[i]);
-            //    }
-            //    await source.SendTextMessageAsync(message.Chat, String.Join("\n", schedule));
-            //}
-            //if ((int)DateTime.Now.DayOfWeek >= 1 && (int)DateTime.Now.DayOfWeek <= 5)
-            //{
-            //    if (message.Text.ToLower().Contains("Розклад на сьогодні".ToLower()))
-            //    {
-            //        var content = await core.GetContentAsync();
-            //        var row = content.Select(s => s.ToList()).Select(ss => $"{ss.ToList()[Helper.GetIndexGroup(selectGroup)]}").Skip(1);
-            //        await source.SendTextMessageAsync(message.Chat, $"Розклад на {Helper.GetNotDay()}");
-            //        List<string> scheduleNowdays = new List<string>();
-            //        scheduleNowdays.Add($"\n\n{Helper.GetNotDay()}");
-            //        int skipped = 0;
-            //        switch (DateTime.Now.DayOfWeek)
-            //        {
-            //            case DayOfWeek.Tuesday:
-            //                skipped += 4 * 1;
-            //                break;
-            //            case DayOfWeek.Wednesday:
-            //                skipped += 4 * 2;
-            //                break;
-            //            case DayOfWeek.Thursday:
-            //                skipped += 4 * 3;
-            //                break;
-            //            case DayOfWeek.Friday:
-            //                skipped += 4 * 4;
-            //                break;
-            //            default:
-            //                break;
-            //        }
-            //        for (int i = 0; i < row.Take(4).Count(); ++i)
-            //        {
-            //            scheduleNowdays.Add($"{i + 1}) " + row.Skip(skipped).Take(4).ToList()[i]);
-            //        }
-            //        await source.SendTextMessageAsync(message.Chat, String.Join("\n", scheduleNowdays));
-            //    }
-            //}
-            //else if (message.Text.ToLower().Contains("Розклад на сьогодні".ToLower()))
-            //{     
-            //    await source.SendTextMessageAsync(message.Chat, "Пар на сьогодні немає");
-            //}
-            if (message.Text.ToLower().Contains("Розклад".ToLower()))
-            {
-                InlineKeyboardButton excel = new InlineKeyboardButton("");
-                excel.Text = "Google Excel";
-                excel.Url = "https://docs.google.com/spreadsheets/d/1n8aU85K284sf3xBCkCK3cdU1k3y8YuLD/edit#gid=231760637";
-                InlineKeyboardMarkup reply = new InlineKeyboardMarkup(excel);
-                await source.SendTextMessageAsync(message.Chat, "Оригінальний розклад", replyMarkup: reply, parseMode: ParseMode.MarkdownV2);
-            }
-        }
-
     }
 }

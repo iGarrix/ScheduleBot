@@ -36,14 +36,14 @@ namespace ScheduleBot.SpreadSheets
         }
         #endregion
 
-        public async Task<IEnumerable<IEnumerable<TObject>>> ReadAsync<TObject>(string spreadId, string range)
+        public async Task<IEnumerable<IEnumerable<string>>> ReadAsync(string spreadId, string range, string errorByte = "Пари немає")
         {
             ValueRange response = await resource.Get(spreadId, range).ExecuteAsync();
             if (response.Values is null || !response.Values.Any())
             {
                 throw new Exception("Data not found"); 
             }
-            return response.Values as IEnumerable<IEnumerable<TObject>>;
+            return response.Values.Select(s => s.ToList().Select(ss => ss is not null ? ss.ToString() : errorByte));
         }
 
         // Doesn't detected

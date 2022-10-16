@@ -9,6 +9,6 @@ namespace ScheduleBot.SpreadSheets
 {
     public interface ISpreadSheetCore : IDisposable
     {
-        Task<IEnumerable<IEnumerable<TObject>>> ReadAsync<TObject>(string spreadId, string range);
+        Task<IEnumerable<IEnumerable<string>>> ReadAsync(string spreadId, string range, string errorByte = "Пари немає");
     }
 }
