@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ScheduleBot
+namespace ScheduleBot.DALL
 {
     public static class Env
     {
@@ -14,10 +14,10 @@ namespace ScheduleBot
 
         public static readonly SpreadSheetsIds SpreadSheets = new SpreadSheetsIds();
         public static readonly ScheduleRange ScheduleRange = new ScheduleRange();
-    
+
     }
 
-    public class SpreadSheetsIds 
+    public class SpreadSheetsIds
     {
         public readonly string Bakalavr1 = "1n8aU85K284sf3xBCkCK3cdU1k3y8YuLD";
         public readonly string Bakalavr2 = "16WDnTvltl8qyuj9lz-uEp8rYcEqBdkvk";

@@ -62,23 +62,25 @@ Console.OutputEncoding = Encoding.UTF8;
 //}
 #endregion
 
-try
-{
-    var cts = new CancellationTokenSource();
-    var cancellationToken = cts.Token;
-    var receiverOptions = new ReceiverOptions
-    {
-        AllowedUpdates = Array.Empty<UpdateType>(),
-    };
-    SourceBot bot = new SourceBot(Env.BOT_API_TOKEN, Env.GoogleCloudDeveloperConsoleCredentials, receiverOptions, cancellationToken);
-    Console.WriteLine("[Started] " + bot.GetCore.GetMeAsync().Result.FirstName);
-    Console.ReadLine();
-}
-catch (Exception ex)
-{
-    Console.WriteLine(ex.Message);
-}
-finally
-{
-    Console.WriteLine("[Stoped] Bot");
-}
+#region Console starting bot
+//try
+//{
+//    var cts = new CancellationTokenSource();
+//    var cancellationToken = cts.Token;
+//    var receiverOptions = new ReceiverOptions
+//    {
+//        AllowedUpdates = Array.Empty<UpdateType>(),
+//    };
+//    SourceBot bot = new SourceBot(Env.BOT_API_TOKEN, Env.GoogleCloudDeveloperConsoleCredentials, receiverOptions, cancellationToken);
+//    Console.WriteLine("[Started] " + bot.GetCore.GetMeAsync().Result.FirstName);
+//    Console.ReadLine();
+//}
+//catch (Exception ex)
+//{
+//    Console.WriteLine(ex.Message);
+//}
+//finally
+//{
+//    Console.WriteLine("[Stoped] Bot");
+//}
+#endregion
