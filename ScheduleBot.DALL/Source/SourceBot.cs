@@ -87,21 +87,13 @@ namespace ScheduleBot.DALL.Source
             {
                 case UpdateType.Message:
                     {
-                        if (dematrix.FirstOrDefault(f => f.ToString().Corrective() == message.Text.Corrective()) is not null)
-                        {
-                            selectedGroup = message.Text;
-                            await GetChoosedGroupMenuAsync(message);
-                        }
                         if (selectedGroup is null || selectedGroup == "" || selectedGroup == String.Empty)
                         {
                             await AutoSelectedGroup(message, dematrix);
                         }
-                        if (message.Text.ToLower() == "/start" || message.Text.ToLower().Contains("Всі групи".ToLower()) || message.Text.ToLower().Contains("Вибрати групу".ToLower()))
-                        {
-                            await ChoosingGroupAsync(message, dematrix);
-                        }
                         else
                         {
+                            
                             if (message.Text.ToLower().Contains("Час пар".ToLower()) || message.Text.ToLower().Contains("Час".ToLower()))
                             {
                                 await GetPairEndedTimeAsync(message);
@@ -114,6 +106,15 @@ namespace ScheduleBot.DALL.Source
                             {
                                 await GetScheduleGroupAsync(message, dematrix);
                             }
+                        }
+                        if (dematrix.FirstOrDefault(f => f.ToString().Corrective() == message.Text.Corrective()) is not null)
+                        {
+                            selectedGroup = message.Text;
+                            await GetChoosedGroupMenuAsync(message);
+                        }
+                        if (message.Text.ToLower() == "/start" || message.Text.ToLower().Contains("Всі групи".ToLower()) || message.Text.ToLower().Contains("Вибрати групу".ToLower()))
+                        {
+                            await ChoosingGroupAsync(message, dematrix);
                         }
                         break;
                     }
