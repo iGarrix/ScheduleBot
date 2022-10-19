@@ -96,7 +96,7 @@ namespace ScheduleBot.DALL.Source
                         {
                             await ChoosingGroupAsync(message, dematrix);
                         }
-                        break;
+                        //break;
                         if (selectedGroup is null || selectedGroup == "" || selectedGroup == String.Empty)
                         {
                             await AutoSelectedGroup(message, dematrix);
@@ -117,6 +117,7 @@ namespace ScheduleBot.DALL.Source
                                 await GetScheduleGroupAsync(message, dematrix);
                             }
                         }
+                        break;
                     }
                 default:
                     break;
